@@ -1,0 +1,1 @@
+This game was made using my Number Fight game as a base and 2d-fied(?) using ChatGPT and Gemini. To play, download all 3 and put them in a folder. Then open Index.html to play. The guides are given in game. There are more scopes to improve it. I might improve them later(or maybe next year haha)
