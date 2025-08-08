@@ -1,0 +1,215 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#game-container {
+    position: relative;
+    border: 2px solid #555;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#gameCanvas {
+    background-color: black;
+    display: block;
+}
+
+#ui-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+
+.player-info {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-info:last-child {
+    align-items: flex-end;
+}
+
+.hp-bar-container {
+    width: 100%;
+    height: 30px;
+    background-color: #444;
+    border: 2px solid white;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#player1-hp-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #00d4ff);
+    transition: width 0.5s ease-in-out;
+}
+
+#p1-hp-container {
+    border-color: #007bff;
+}
+
+#player2-hp-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #dc3545, #ff7b89);
+    transition: width 0.5s ease-in-out;
+}
+
+#p2-hp-container {
+    border-color: #dc3545;
+}
+
+#timer {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px #000;
+}
+
+.player-info span {
+    margin-top: 5px;
+    font-size: 1.1em;
+}
+
+#key-instructions {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.2em;
+    color: #aaa;
+    background-color: rgba(0,0,0,0.5);
+    padding: 5px 15px;
+    border-radius: 5px;
+    display: none; /* Hidden by default */
+}
+
+
+#message-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5em;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    text-shadow: 3px 3px 6px #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+#attack-buttons {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none; /* Initially hidden */
+}
+
+#attack-buttons button {
+    padding: 15px 40px;
+    font-size: 1.4em;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid #ffc107;
+    background-color: rgba(80, 60, 0, 0.8);
+    color: #ffc107;
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+#attack-buttons button:hover:not(:disabled) {
+    background-color: rgba(100, 80, 0, 0.9);
+}
+
+#attack-buttons button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+#attack-buttons button:disabled {
+    background-color: #333;
+    color: #777;
+    border-color: #777;
+    cursor: not-allowed;
+}
+
+#menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#menu-overlay.active {
+    display: flex;
+}
+
+.menu-card {
+    background-color: #2b2b2b;
+    padding: 30px 40px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #555;
+    display: none;
+}
+
+.menu-card.active {
+    display: block;
+}
+
+.menu-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.menu-card button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    margin: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.menu-card button:hover {
+    background-color: #0056b3;
+}
+
+#rules-screen ol {
+    text-align: left;
+    margin: 0 auto 20px auto;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+#close-rules-btn, #play-again-no {
+    background-color: #6c757d;
+}
+
+#close-rules-btn:hover, #play-again-no:hover {
+    background-color: #5a6268;
+}

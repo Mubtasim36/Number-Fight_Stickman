@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickman Fighter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-container">
+            <div class="player-info">
+                <div class="hp-bar-container" id="p1-hp-container">
+                    <div id="player1-hp-bar"></div>
+                </div>
+                <span id="player1-hp-text">P1 HP: 1000</span>
+                <span id="player1-moves">Attacks: 0</span>
+            </div>
+
+            <div id="timer">499</div>
+
+            <div class="player-info">
+                <div class="hp-bar-container" id="p2-hp-container">
+                    <div id="player2-hp-bar"></div>
+                </div>
+                <span id="player2-hp-text">P2 HP: 1000</span>
+                <span id="player2-moves">Attacks: 0</span>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        
+        <div id="key-instructions"></div>
+
+        <div id="message-box"></div>
+
+        <div id="attack-buttons">
+            <button id="attack-btn">ATTACK!</button>
+        </div>
+
+        <div id="menu-overlay" class="active">
+            <div id="mode-selection" class="menu-card active">
+                <h2>Select Game Mode</h2>
+                <button class="mode-btn" data-mode="2player">2 Player Mode</button>
+                <button class="mode-btn" data-mode="cpu">VS CPU Mode</button>
+                <button class="mode-btn" data-mode="survival">Survival Mode</button>
+                <p>Press 'R' for Rules</p>
+            </div>
+
+            <div id="rules-screen" class="menu-card">
+                <h2>📜 Game Rules</h2>
+                <ol>
+                    <li>Each player starts with 1000 HP.</li>
+                    <li>Melee attacks deal 50–349 damage. Hits over 200 are critical.</li>
+                    <li>If a player's HP reaches 0, they lose.</li>
+                    <li>If the timer reaches 0, the player with lower HP loses.</li>
+                    <li>A draw results in a sudden death ultimate round.</li>
+                    <li>VS CPU Mode: The CPU attacks automatically.</li>
+                    <li>Survival Mode: Fight endless rounds. The CPU's HP increases each round.</li>
+                </ol>
+                <button id="close-rules-btn">Close</button>
+            </div>
+            
+            <div id="game-over" class="menu-card">
+                <h2 id="game-over-message"></h2>
+                <p>Do you want to play again?</p>
+                <button id="play-again-yes">Yes</button>
+                <button id="play-again-no">No</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
