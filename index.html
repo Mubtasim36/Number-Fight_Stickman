@@ -1,74 +1,882 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stickman Fighter</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Stickman Fight — Modern</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #121212;
+    --panel: #1e1e1e;
+    --border: #333;
+    --primary: #5e8dff;
+    --secondary: #ff8c00;
+    --text-primary: #fff;
+    --text-secondary: #bbb;
+    --shadow: rgba(0,0,0,0.4);
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text-primary);font-family:Inter,sans-serif;}
+  #wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px;height:100vh;box-sizing:border-box;}
+  .topbar{width:100%;max-width:1200px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+  .col{display:flex;flex-direction:column;gap:8px}
+  .bar-wrap{background:var(--panel);border-radius:16px;overflow:hidden;width:280px;height:20px;box-shadow:inset 0 2px 4px var(--shadow)}
+  .bar{height:100%;transition:width .25s linear;border-radius:16px}
+  .exp-wrap{background:var(--panel);border-radius:12px;overflow:hidden;width:280px;height:12px}
+  .exp{height:100%;transition:width .25s linear;border-radius:12px}
+  .muted{color:var(--text-secondary);font-size:14px}
+  canvas{background:#000;border-radius:12px;max-width:1200px;width:100%;height:64vh;display:block;box-shadow:0 8px 16px var(--shadow)}
+  .controls{width:100%;max-width:1200px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .panel{background:var(--panel);padding:12px;border-radius:12px;display:flex;gap:12px;align-items:center;box-shadow:0 4px 8px var(--shadow)}
+  button{background:var(--primary);border:none;color:#fff;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;transition:background 0.2s}
+  button:hover{background:#4a76d8}
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);z-index:100}
+  .menu{background:var(--panel);padding:24px;border-radius:16px;border:1px solid var(--border);min-width:360px;color:var(--text-primary);text-align:center;box-shadow:0 8px 20px var(--shadow)}
+  .centerText{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:120px;font-weight:700;color:var(--primary);pointer-events:none;text-align:center;z-index:30;text-shadow:0 0 10px rgba(0,0,0,0.5)}
+  #flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:40;transition:opacity .12s linear}
+  #log{width:100%;max-width:1200px;background:var(--panel);padding:12px;border-radius:8px;font-family:monospace;font-size:13px;height:86px;overflow:auto;border:1px solid var(--border)}
+  .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #333; padding-bottom: 4px; }
+  .log-entry:last-child { border-bottom: none; }
+  @media (max-width:720px){ .centerText{font-size:64px} .bar-wrap,.exp-wrap{width:160px} canvas{height:50vh} }
+  #title-screen { font-family: 'Times New Roman', Times, serif; font-size: 5rem; font-weight: bold; }
+  .sound-upload-container { margin-top: 10px; text-align: left; }
+  .sound-upload-container label { display: block; margin-bottom: 5px; color: var(--text-secondary); }
+  input[type="file"] { background: #222; border: 1px solid #444; padding: 6px; border-radius: 6px; color: var(--text-primary); }
+  .combo-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--secondary);
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px #000;
+    opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  .rules-list { text-align: left; }
+  .rules-list li { margin-bottom: 8px; }
+  .button-group { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
+</style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="ui-container">
-            <div class="player-info">
-                <div class="hp-bar-container" id="p1-hp-container">
-                    <div id="player1-hp-bar"></div>
-                </div>
-                <span id="player1-hp-text">P1 HP: 1000</span>
-                <span id="player1-moves">Attacks: 0</span>
-            </div>
-
-            <div id="timer">499</div>
-
-            <div class="player-info">
-                <div class="hp-bar-container" id="p2-hp-container">
-                    <div id="player2-hp-bar"></div>
-                </div>
-                <span id="player2-hp-text">P2 HP: 1000</span>
-                <span id="player2-moves">Attacks: 0</span>
-            </div>
-        </div>
-
-        <canvas id="gameCanvas" width="1000" height="600"></canvas>
-        
-        <div id="key-instructions"></div>
-
-        <div id="message-box"></div>
-
-        <div id="attack-buttons">
-            <button id="attack-btn">ATTACK!</button>
-        </div>
-
-        <div id="menu-overlay" class="active">
-            <div id="mode-selection" class="menu-card active">
-                <h2>Select Game Mode</h2>
-                <button class="mode-btn" data-mode="2player">2 Player Mode</button>
-                <button class="mode-btn" data-mode="cpu">VS CPU Mode</button>
-                <button class="mode-btn" data-mode="survival">Survival Mode</button>
-                <p>Press 'R' for Rules</p>
-            </div>
-
-            <div id="rules-screen" class="menu-card">
-                <h2>📜 Game Rules</h2>
-                <ol>
-                    <li>Each player starts with 1000 HP.</li>
-                    <li>Melee attacks deal 50–349 damage. Hits over 200 are critical.</li>
-                    <li>If a player's HP reaches 0, they lose.</li>
-                    <li>If the timer reaches 0, the player with lower HP loses.</li>
-                    <li>A draw results in a sudden death ultimate round.</li>
-                    <li>VS CPU Mode: The CPU attacks automatically.</li>
-                    <li>Survival Mode: Fight endless rounds. The CPU's HP increases each round.</li>
-                </ol>
-                <button id="close-rules-btn">Close</button>
-            </div>
-            
-            <div id="game-over" class="menu-card">
-                <h2 id="game-over-message"></h2>
-                <p>Do you want to play again?</p>
-                <button id="play-again-yes">Yes</button>
-                <button id="play-again-no">No</button>
-            </div>
-        </div>
+<div id="wrap">
+  <div class="topbar">
+    <div class="col">
+      <div style="font-weight:700">Player 1</div>
+      <div class="bar-wrap"><div id="bar1" class="bar" style="background:var(--primary);width:100%"></div></div>
+      <div class="exp-wrap"><div id="exp1" class="exp" style="background:#FFD700;width:0%"></div></div>
+      <div id="expText1" class="muted"></div>
+      <div id="hp1" class="muted">1000</div>
     </div>
-    <script src="script.js"></script>
+
+    <div style="text-align:center">
+      <div id="timer" style="font-size:24px; font-weight:700;">499</div>
+      <div class="muted">Countdown</div>
+      <div id="round-info" class="muted" style="margin-top:4px;">Round 1</div>
+    </div>
+
+    <div class="col" style="align-items:flex-end">
+      <div style="font-weight:700">Player 2</div>
+      <div class="bar-wrap"><div id="bar2" class="bar" style="background:#d32f2f;width:100%"></div></div>
+      <div class="exp-wrap"><div id="exp2" class="exp" style="background:#C0C0C0;width:0%"></div></div>
+      <div id="hp2" class="muted">1000</div>
+      <div id="expText2" class="muted"></div>
+    </div>
+  </div>
+
+  <div style="position:relative; width:100%; max-width:1200px;">
+    <canvas id="game" width="1200" height="640"></canvas>
+    <div id="centerTxt" class="centerText" style="display:none"></div>
+    <div id="flash"></div>
+  </div>
+
+  <div class="controls">
+    <div class="panel" style="flex:1;justify-content:space-between">
+      <div>
+        <div><strong>Mode:</strong> <span id="modeLabel">None</span></div>
+        <div class="muted">P1: A/D = move, W = jump, E = melee, Q = ultimate, F = special</div>
+        <div class="muted">P2: J/L = move, I = jump, O = melee, U = ultimate (or CPU), H = special</div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="menuBtn">Mode Select</button>
+        <button id="resetBtn">Reload</button>
+        <input id="bgUpload" type="file" accept="image/*"/>
+      </div>
+    </div>
+  </div>
+
+  <div id="log">Ready — press Mode Select to choose a mode.</div>
+</div>
+
+<div id="titleOverlay" class="overlay">
+  <div class="menu">
+    <h2 id="title-screen">Stickman Wars</h2>
+    <h3 style="margin-top: 1rem;">Press Start to Play</h3>
+    <div class="button-group">
+      <button id="startBtn">Start</button>
+      <button id="rulesBtn">Rules</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay" style="display:none">
+  <div class="menu">
+    <h2>Mode Selection</h2>
+    <div class="button-group">
+      <button id="mode2p">2 Player</button>
+      <button id="modeCpu">VS CPU</button>
+      <button id="modeSurv">Survival</button>
+    </div>
+    <div class="sound-upload-container">
+      <label>Upload Sound Effect for Melee Hit (.wav):</label>
+      <input type="file" id="meleeSoundUpload" accept="audio/wav">
+      <label>Upload Sound Effect for Ultimate Hit (.wav):</label>
+      <input type="file" id="ultimateSoundUpload" accept="audio/wav">
+    </div>
+    <div class="button-group">
+      <button id="startMatch">Start Match</button>
+      <button id="closeMenu">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="rulesOverlay" class="overlay" style="display:none">
+  <div class="menu">
+    <h2>Rules</h2>
+    <ol class="rules-list">
+      <li>Each player starts with <strong>1000 HP</strong>.</li>
+      <li>Melee attacks do <strong>50–349</strong> damage. >200 = critical.</li>
+      <li>Ultimate (draw/exp) does <strong>200–799</strong>. >700 = critical.</li>
+      <li>If HP ≤ 0 → laid down (KO).</li>
+      <li>If timer hits 0 → lower HP loses; equal HP → Ultimate.</li>
+      <li>Survival: CPU HP +100 per round & CPU skill increases each round. Player HP is boosted by 40% (max 1000). CPU size increases by 5% each round.</li>
+      <li>New attacks are available in later rounds of Survival.</li>
+    </ol>
+    <div class="button-group"><button id="closeRules">Close</button></div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay" style="display:none">
+  <div class="menu">
+    <h2 id="endTitle">Game Over</h2>
+    <div id="endText" class="muted" style="margin-top:6px"></div>
+    <div class="button-group">
+      <button id="playAgain">Play Again</button>
+      <button id="quitBtn">Quit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* --------- Full integrated game JS ---------- */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const bar1 = document.getElementById('bar1'), bar2 = document.getElementById('bar2');
+const exp1 = document.getElementById('exp1'), exp2 = document.getElementById('exp2');
+const expText1 = document.getElementById('expText1'), expText2 = document.getElementById('expText2');
+const hp1El = document.getElementById('hp1'), hp2El = document.getElementById('hp2');
+const timerEl = document.getElementById('timer'), centerTxt = document.getElementById('centerTxt');
+const flashDiv = document.getElementById('flash'), modeLabel = document.getElementById('modeLabel');
+const logEl = document.getElementById('log'), roundInfoEl = document.getElementById('round-info');
+
+let audioCtx;
+function beep(freq=440, dur=0.08, vol=0.03){ try {
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.frequency.value = freq; g.gain.value = vol; o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+} catch(e) { /* audio blocked */ } }
+
+function log(msg){ logEl.innerHTML = `<div class="log-entry">[${new Date().toLocaleTimeString()}] ${msg}</div>` + logEl.innerHTML; }
+
+/* Game state */
+const state = {
+  mode: null, turns:6, running:false, allowInput:false, timer:499,
+  projectiles:[], round:1, preCountdown:false,
+  parallax:{enabled:false, layers:[], offset:0},
+  frame: 0,
+  hazards: [],
+  hazardTimer: 0,
+  shiftingPlatform: null,
+  aoeAttacks: []
+};
+
+/* Player class */
+const STICK_H = 110;
+class Player {
+  constructor(x, team, scale = 1){
+    this.x = x; this.y = H - 60; this.baseY = this.y; this.vy = 0;
+    this.team = team; this.hp = 1000; this.exp = 0;
+    this.width = 36; this.height = STICK_H * scale; this.speed = 3.6 / scale;
+    this.onGround = true; this.jumping=false; this.jumpPower = 12; this.dead=false;
+    this.aiSkill = 1; this.aiTimer = 0;
+    this.vx = 0; this.attackTimer = 0; this.attackCooldown = 0.5;
+    this.scale = scale;
+    this.dashReady = false;
+    this.dashCooldown = 3;
+    this.dashTimer = 0;
+    this.dashDuration = 0.2;
+    this.isDashing = false;
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.specialAttackCooldown = 5;
+    this.specialAttackTimer = 0;
+    this.color = this.team === 1 ? '#5e8dff' : '#d32f2f';
+  }
+  update(dt){
+    if(this.dead) return;
+    this.vy += 30 * dt;
+    this.y += this.vy;
+    if(this.y > this.baseY){ this.y = this.baseY; this.vy = 0; this.onGround = true; this.jumping=false; }
+    if(this.attackTimer > 0) this.attackTimer -= dt;
+    if(this.dashTimer > 0) this.dashTimer -= dt;
+    if(this.specialAttackTimer > 0) this.specialAttackTimer -= dt;
+    if(this.comboTimer > 0) this.comboTimer -= dt;
+    else this.comboCount = 0;
+    if(this.isDashing){
+        this.x += this.vx * dt * 60 * 2;
+        this.y = this.baseY;
+    }
+  }
+  jump(){ if(this.dead) return; if(this.onGround){ this.vy = -this.jumpPower; this.onGround=false; this.jumping=true; beep(720,0.06); } }
+  applyDamage(d){ this.hp -= d; if(this.hp <= 0){ this.hp = 0; this.dead = true; } }
+  draw(ctx){
+    ctx.save();
+    if(this.dead){
+      const pivotX = this.x, pivotY = this.baseY - 18;
+      ctx.translate(pivotX, pivotY);
+      ctx.rotate(Math.PI/2);
+      ctx.translate(-pivotX, -pivotY);
+    }
+
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.scale, this.scale);
+    ctx.translate(-this.x, -this.y);
+
+    const playerColor = this.color;
+    const outlineColor = '#fff';
+
+    ctx.strokeStyle = outlineColor;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+
+    const walkCycle = Math.sin(state.frame * 0.1 * (this.vx / this.speed));
+    const armOffset = walkCycle * 10;
+    const legOffset = walkCycle * 14;
+
+    // Torso
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - this.height + 36);
+    ctx.lineTo(this.x, this.y - 18);
+    ctx.stroke();
+
+    // Head (filled circle)
+    ctx.fillStyle = playerColor;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y - this.height + 22, 14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Arms
+    ctx.beginPath();
+    ctx.moveTo(this.x - 22 + armOffset, this.y - this.height + 48);
+    ctx.lineTo(this.x + 22 - armOffset, this.y - this.height + 48);
+    ctx.stroke();
+
+    // Legs
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - 18);
+    ctx.lineTo(this.x - 22 + legOffset, this.y + 20);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - 18);
+    ctx.lineTo(this.x + 22 - legOffset, this.y + 20);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+/* Projectile */
+class Projectile {
+  constructor(x,y,vx,vy,size,owner,isUltimate=false,color='#fff', type='melee'){
+    this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.size=size; this.owner=owner;
+    this.isUltimate=isUltimate; this.color=color; this.active=true;
+    this.type = type;
+  }
+  update(dt){
+    if (this.type === 'bouncing') {
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      if (this.x < this.size || this.x > W - this.size) this.vx *= -1;
+      if (this.y < this.size || this.y > H - 36 - this.size) this.vy *= -1;
+    } else {
+      this.x += this.vx*dt; this.y += this.vy*dt;
+      if(this.x < -100 || this.x > W + 100) this.active=false;
+    }
+  }
+  draw(ctx){
+    ctx.save();
+    if(this.isUltimate){ ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); }
+    else { ctx.strokeStyle=this.color; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+
+/* instantiate */
+let p1 = new Player(200,1);
+let p2 = new Player(W - 200,2);
+
+/* Audio files */
+let meleeSound = new Audio();
+let ultimateSound = new Audio();
+
+document.getElementById('meleeSoundUpload').addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    meleeSound = new Audio(URL.createObjectURL(file));
+  }
+});
+
+document.getElementById('ultimateSoundUpload').addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    ultimateSound = new Audio(URL.createObjectURL(file));
+  }
+});
+
+/* UI update */
+function updateUI(){
+  bar1.style.width = Math.max(0, Math.min(100, Math.round(p1.hp/1000*100))) + '%';
+  bar2.style.width = Math.max(0, Math.min(100, Math.round(p2.hp/1000*100))) + '%';
+  hp1El.innerText = Math.max(0, Math.round(p1.hp));
+  hp2El.innerText = Math.max(0, Math.round(p2.hp));
+  exp1.style.width = Math.min(100, p1.exp) + '%';
+  exp2.style.width = Math.min(100, p2.exp) + '%';
+  expText1.innerText = p1.exp >= 100 ? 'Ultimate Ready (Q)' : '';
+  expText2.innerText = p2.exp >= 100 ? ((state.mode === 'cpu' || state.mode === 'surv') ? 'CPU Ultimate Ready' : 'Ultimate Ready (U)') : '';
+  timerEl.innerText = state.timer;
+  modeLabel.innerText = state.mode ? state.mode.toUpperCase() : 'None';
+  roundInfoEl.innerText = `Round ${state.round}`;
+}
+
+/* flash */
+let flashTimer = 0;
+function startFlash(){
+  flashDiv.style.background = 'rgba(255,255,255,0.4)';
+  flashDiv.style.opacity = '1';
+  flashTimer = 0.16;
+  setTimeout(()=>{ flashDiv.style.opacity = '0'; }, 150);
+}
+
+/* firing & resolving */
+function fireMelee(attacker, defender){
+  if(attacker.dead || attacker.attackTimer > 0) return;
+  attacker.attackTimer = attacker.attackCooldown;
+  const dir = attacker.x < defender.x ? 1 : -1;
+  const sx = attacker.x + dir * 30;
+  const sy = attacker.y - attacker.height + 44;
+  const speed = 640;
+  const pr = new Projectile(sx, sy, dir*speed, 0, 12, attacker, false, '#fff', 'melee');
+  state.projectiles.push(pr);
+  if(meleeSound.src) meleeSound.play();
+}
+
+function fireUltimate(attacker, defender){
+  if(attacker.dead || attacker.exp < 100) return;
+  attacker.exp = 0;
+  attacker.attackTimer = attacker.attackCooldown;
+  const dir = attacker.x < defender.x ? 1 : -1;
+  const sx = attacker.x + dir * 30;
+  const sy = attacker.y - attacker.height + 30;
+  const speed = 360;
+  const color = attacker.team===1 ? '#2b82ff' : '#d4af37';
+  const pr = new Projectile(sx, sy, dir*speed, 0, 36, attacker, true, color);
+  state.projectiles.push(pr);
+  log(`${attacker.team===1 ? 'P1' : 'P2/CPU'} used ULTIMATE!`);
+  beep(240,0.18);
+  if(ultimateSound.src) ultimateSound.play();
+}
+
+function fireSpecial(attacker, defender) {
+    if(attacker.dead || attacker.specialAttackTimer > 0 || state.round < 3) return;
+    attacker.specialAttackTimer = attacker.specialAttackCooldown;
+    const dir = attacker.x < defender.x ? 1 : -1;
+    const sx = attacker.x + dir * 30;
+    const sy = attacker.y - attacker.height + 44;
+    const speed = 400;
+    
+    // Randomly choose between bouncing or AoE for CPU, based on round
+    if (state.mode === 'surv' && attacker.team === 2) {
+      if(state.round >= 3 && Math.random() < 0.5) {
+        log(`CPU used Bouncing Projectile!`);
+        const pr = new Projectile(sx, sy, dir*speed, -150, 16, attacker, false, '#ff00ff', 'bouncing');
+        state.projectiles.push(pr);
+      } else {
+        log(`CPU used Area of Effect Attack!`);
+        state.aoeAttacks.push({ x: defender.x, y: H-36, radius: 100, timer: 0.8, owner: attacker, done: false });
+      }
+    } else {
+      // Player gets bouncing attack from round 5
+      if (state.round >= 5) {
+        log(`${attacker.team === 1 ? 'P1' : 'P2'} used Special Attack!`);
+        const pr = new Projectile(sx, sy, dir*speed, -150, 16, attacker, false, '#ff00ff', 'bouncing');
+        state.projectiles.push(pr);
+      }
+    }
+}
+
+/* resolve one projectile hitting defender */
+function resolveProjectile(pr, defender){
+  const headY = defender.y - defender.height + 22;
+  const dodged = defender.jumping && (headY < pr.y - 6);
+  
+  if(dodged){
+    log(`${defender.team===1 ? 'P1' : 'P2'} DODGED`); 
+    beep(1000,0.04); 
+    if(pr.isUltimate) startFlash();
+    defender.exp = Math.min(100, defender.exp + 10);
+    defender.hp = Math.min(1000, defender.hp + 20);
+    return; 
+  }
+  
+  // Reset defender's combo
+  defender.comboCount = 0;
+  
+  let dmg = pr.isUltimate ? (200 + Math.floor(Math.random()*600)) : (50 + Math.floor(Math.random()*300));
+  let crit = pr.isUltimate ? (dmg > 700) : (dmg > 200);
+
+  // Apply combo bonus
+  const comboBonus = pr.owner.comboCount > 1 ? (pr.owner.comboCount * 10) : 0;
+  dmg += comboBonus;
+
+  const dmgMultiplier = 1 + (state.mode === 'surv' ? (state.round / 10) : 0);
+  dmg *= dmgMultiplier;
+  
+  defender.applyDamage(dmg);
+  
+  const gain = 30 + Math.floor(Math.random()*6) + (pr.owner.comboCount > 1 ? pr.owner.comboCount * 2 : 0);
+  pr.owner.exp = Math.min(100, pr.owner.exp + gain);
+  log(`${pr.owner.team===1 ? 'P1' : 'P2/CPU'} hit for ${Math.round(dmg)}${crit ? ' (CRITICAL)' : ''}`);
+  if(pr.isUltimate) startFlash();
+  beep(pr.owner.team===1 ? 760 : 420, 0.06);
+  updateUI();
+  
+  if (!pr.isUltimate) {
+    const comboText = document.createElement('div');
+    comboText.classList.add('combo-text');
+    pr.owner.comboCount++;
+    pr.owner.comboTimer = 1.5;
+    comboText.innerText = `Combo! x${pr.owner.comboCount}`;
+    canvas.parentElement.appendChild(comboText);
+    setTimeout(() => {
+        comboText.style.opacity = '1';
+        comboText.style.transform = `translate(-50%, -100px) scale(1.2)`;
+    }, 10);
+    setTimeout(() => comboText.remove(), 1000);
+  } else {
+    pr.owner.comboCount = 0;
+  }
+}
+
+/* countdown */
+function runCountdown(cb, message = 'START!'){
+  state.preCountdown = true;
+  state.allowInput = false;
+  centerTxt.style.display = 'block';
+  const seq = ['3','2','1', message]; let i=0;
+  const tick = () => {
+    if(i >= seq.length){ centerTxt.style.display='none'; state.preCountdown=false; state.allowInput=true; state.running=true; if(cb) cb(); return; }
+    centerTxt.innerText = seq[i]; centerTxt.style.color = seq[i] === 'START!' ? '#FFD700' : '#fff'; beep(640 + i*40,0.12);
+    i++; setTimeout(tick,1000);
+  };
+  tick();
+}
+
+/* parallax / background */
+let parallaxLayers = [];
+document.getElementById('bgUpload').addEventListener('change', (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => {
+    parallaxLayers = [
+      {img, speed:0.2, scale:1.06},
+      {img, speed:0.45, scale:1.0},
+      {img, speed:0.9, scale:0.88}
+    ];
+    state.parallax.enabled = true;
+    log('Background image loaded for parallax.');
+  };
+  img.src = url;
+});
+
+/* CPU skill scaling */
+function cpuSkillForRound(r){ return Math.min(12, Math.max(1, Math.floor(r))); }
+
+/* CPU AI */
+function cpuAI(dt){
+  if(!p2 || p2.dead) return;
+  p2.aiSkill = cpuSkillForRound(state.round);
+  
+  const dist = p2.x - p1.x;
+  const targetDist = 200 - p2.aiSkill * 10;
+  
+  const dashChance = Math.min(0.8, (state.round / 10));
+
+  if (p2.dashTimer <= 0 && Math.abs(dist) > 200 && Math.abs(dist) < 500 && Math.random() < dashChance) {
+      p2.isDashing = true;
+      p2.dashTimer = p2.dashCooldown;
+      p2.vx = dist > 0 ? -1 : 1;
+      setTimeout(() => { p2.isDashing = false; p2.vx = 0; }, p2.dashDuration * 1000);
+      return;
+  }
+
+  if(Math.abs(dist) > targetDist + 10){
+    p2.vx = (dist > 0 ? -1 : 1) * p2.speed * 1.2;
+  } else if (Math.abs(dist) < targetDist - 10) {
+    p2.vx = (dist > 0 ? 1 : -1) * p2.speed;
+  } else {
+    p2.vx = 0;
+  }
+  p2.x += p2.vx * dt * 60;
+
+  p2.aiTimer -= dt; 
+  if(p2.aiTimer > 0) return;
+  const base = Math.max(0.28, 1.1 - p2.aiSkill*0.07);
+  p2.aiTimer = base * (0.6 + Math.random()*0.8);
+
+  if(Math.random() < (0.25 + p2.aiSkill * 0.05)) p2.jump();
+  if(Math.abs(dist) < (480 - p2.aiSkill * 20) && Math.random() < (0.3 + p2.aiSkill * 0.05)) fireMelee(p2, p1);
+
+  if(p2.exp >= 100 && Math.random() < (0.5 + p2.aiSkill * 0.02)) fireUltimate(p2, p1);
+  
+  if(state.round >= 3 && p2.specialAttackTimer <= 0 && Math.random() < 0.2) fireSpecial(p2, p1);
+
+  p2.x = Math.max(40, Math.min(W - 40, p2.x));
+}
+
+/* Input handlers */
+const keys = {};
+document.addEventListener('keydown', (e)=>{ keys[e.key.toLowerCase()] = true;
+  if(e.key.toLowerCase() === 'q' && state.allowInput && state.running){ if(p1.exp >= 100) fireUltimate(p1, p2); }
+  if(e.key.toLowerCase() === 'u' && state.allowInput && state.running && state.mode === '2p'){ if(p2.exp >= 100) fireUltimate(p2, p1); }
+  if(e.key.toLowerCase() === 'e' && state.allowInput && state.running) fireMelee(p1, p2);
+  if(e.key.toLowerCase() === 'o' && state.allowInput && state.running && state.mode === '2p') fireMelee(p2, p1);
+  if(e.key.toLowerCase() === 'f' && state.allowInput && state.running) fireSpecial(p1, p2);
+  if(e.key.toLowerCase() === 'h' && state.allowInput && state.running && state.mode === '2p') fireSpecial(p2, p1);
+  if(e.key.toLowerCase() === 'r') document.getElementById('rulesOverlay').style.display = 'flex';
+});
+document.addEventListener('keyup', (e)=>{ keys[e.key.toLowerCase()] = false; });
+
+/* Continuous movement */
+setInterval(()=> {
+  if(!state.allowInput || !state.running) return;
+  p1.vx = 0;
+  if(keys['a']){ p1.x = Math.max(40, p1.x - p1.speed); p1.vx = -p1.speed; }
+  if(keys['d']){ p1.x = Math.min(W - 40, p1.x + p1.speed); p1.vx = p1.speed; }
+  if(keys['w']) p1.jump();
+  if(state.mode === '2p'){
+    p2.vx = 0;
+    if(keys['j']){ p2.x = Math.max(40, p2.x - p2.speed); p2.vx = -p2.speed; }
+    if(keys['l']){ p2.x = Math.min(W - 40, p2.x + p2.speed); p2.vx = p2.speed; }
+    if(keys['i']) p2.jump();
+  }
+}, 1000/60);
+
+/* CPU Ultimate auto-use in CPU/Survival */
+setInterval(()=>{
+  if(state.running && state.allowInput && (state.mode === 'cpu' || state.mode === 'surv')){
+    if(p2.exp >= 100){
+      const useChance = Math.min(0.9, 0.2 + (p2.aiSkill||1)*0.07);
+      if(Math.random() < useChance) fireUltimate(p2, p1);
+    }
+  }
+}, 650);
+
+/* Main loop */
+let last = performance.now(), accum = 0;
+function mainLoop(now){
+  const dt = Math.min(0.05, (now - last)/1000);
+  last = now;
+  update(dt); draw();
+  requestAnimationFrame(mainLoop);
+}
+requestAnimationFrame(mainLoop);
+
+/* Update function */
+let timerAcc = 0;
+function update(dt){
+  if(!p1 || !p2) return;
+  p1.update(dt); p2.update(dt);
+  state.frame++;
+
+  if((state.mode === 'cpu' || state.mode === 'surv') && state.allowInput && state.running) cpuAI(dt);
+  
+  if(state.mode === 'surv' && state.running){
+    // Update environmental hazards
+    state.hazardTimer += dt;
+    const spawnRate = Math.max(1, 10 - state.round * 0.5);
+    if(state.hazardTimer > spawnRate){
+        state.hazardTimer = 0;
+        state.hazards.push({
+            x: 100 + Math.random() * (W-200),
+            y: H-40,
+            width: 80,
+            height: 20,
+            dmg: 50 + state.round * 10
+        });
+        if(state.hazards.length > 5) state.hazards.shift();
+    }
+    // Update shifting platform
+    if(state.shiftingPlatform){
+        state.shiftingPlatform.x += state.shiftingPlatform.vx * dt;
+        if(state.shiftingPlatform.x > W-100 || state.shiftingPlatform.x < 100) state.shiftingPlatform.vx *= -1;
+    }
+  }
+
+  // Handle player collision with shifting platform
+  const players = [p1, p2];
+  if(state.shiftingPlatform){
+    players.forEach(p => {
+      const platform = state.shiftingPlatform;
+      const onPlatform = p.y >= platform.y - p.height && p.y <= platform.y - p.height + 5 && p.x >= platform.x && p.x <= platform.x + platform.width;
+      if(onPlatform){
+        p.onGround = true;
+        p.jumping = false;
+        p.vy = 0;
+        p.y = platform.y - p.height;
+        p.x += platform.vx * dt; // Move player with the platform
+      }
+    });
+  }
+
+  // projectiles
+  for(const pr of state.projectiles) pr.update(dt);
+  for(const pr of state.projectiles){
+    if(!pr.active) continue;
+    const target = pr.owner === p1 ? p2 : p1;
+    const dx = Math.abs(pr.x - target.x);
+    const dy = Math.abs(pr.y - (target.y - target.height/2));
+    if(dx < 40 * target.scale && dy < 60 * target.scale){
+      resolveProjectile(pr, target);
+      pr.active = false;
+      if(target.dead) handleKO(target, pr.owner);
+    }
+  }
+  state.projectiles = state.projectiles.filter(p=>p.active);
+
+  // AoE attacks
+  for(const aoe of state.aoeAttacks) {
+    if(aoe.done) continue;
+    aoe.timer -= dt;
+    if(aoe.timer <= 0) {
+      const target = aoe.owner === p1 ? p2 : p1;
+      const distToTarget = Math.sqrt(Math.pow(target.x - aoe.x, 2) + Math.pow(target.y - aoe.y, 2));
+      if(distToTarget <= aoe.radius) {
+        let dmg = 150 + Math.floor(Math.random()*200);
+        const dmgMultiplier = 1 + (state.mode === 'surv' ? (state.round / 10) : 0);
+        dmg *= dmgMultiplier;
+        target.applyDamage(dmg);
+        log(`${aoe.owner.team === 1 ? 'P1' : 'P2/CPU'} hit with AoE for ${Math.round(dmg)}`);
+        startFlash();
+      }
+      aoe.done = true;
+    }
+  }
+  state.aoeAttacks = state.aoeAttacks.filter(a => !a.done);
+
+
+  if(state.running && !state.preCountdown){
+    timerAcc += dt;
+    if(timerAcc >= 1){ timerAcc -= 1; if(state.timer > 0) state.timer--; else {
+      // timer 0: decide
+      if(Math.round(p1.hp) !== Math.round(p2.hp)){
+        const winner = p1.hp > p2.hp ? p1 : p2;
+        handleKO(p1.hp > p2.hp ? p2 : p1, winner);
+      } else {
+        // tie -> ultimate
+        const first = Math.random() < 0.5 ? p1 : p2;
+        const other = first === p1 ? p2 : p1;
+        fireUltimate(first, other);
+      }
+    } }
+  }
+
+  for(const h of state.hazards){
+    if(p1.x > h.x && p1.x < h.x + h.width && p1.y > h.y - h.height){ p1.applyDamage(h.dmg*dt); }
+    if(p2.x > h.x && p2.x < h.x + h.width && p2.y > h.y - h.height){ p2.applyDamage(h.dmg*dt); }
+  }
+
+  updateUI();
+}
+
+/* Render */
+function draw(){
+  if(state.parallax.enabled && parallaxLayers.length){
+    ctx.clearRect(0,0,W,H);
+    parallaxLayers.forEach((ly, i)=>{
+      const img = ly.img;
+      if(!img) return;
+      const speed = ly.speed;
+      const offset = (state.parallax.offset * speed) % img.width;
+      const drawW = W, drawH = H;
+      ctx.drawImage(img, 0, 0, img.width, img.height, -offset, 0, drawW, drawH);
+      ctx.drawImage(img, 0, 0, img.width, img.height, drawW - offset, 0, drawW, drawH);
+    });
+    state.parallax.offset += 0.4;
+  } else {
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#001a1a'); g.addColorStop(1,'#000');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+
+  ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, H - 36, W, 36);
+
+  for(const h of state.hazards){
+    ctx.fillStyle = 'rgba(255,0,0,0.6)'; ctx.fillRect(h.x,h.y,h.width,h.height);
+  }
+  
+  if(state.shiftingPlatform){
+    ctx.fillStyle = '#666'; ctx.fillRect(state.shiftingPlatform.x, state.shiftingPlatform.y, state.shiftingPlatform.width, state.shiftingPlatform.height);
+  }
+
+  for(const aoe of state.aoeAttacks) {
+    ctx.save();
+    ctx.fillStyle = `rgba(255,140,0,${aoe.timer / 0.8})`;
+    ctx.beginPath();
+    ctx.arc(aoe.x, aoe.y, aoe.radius * (1 - aoe.timer / 0.8), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  p1.draw(ctx); p2.draw(ctx);
+
+  for(const pr of state.projectiles) pr.draw(ctx);
+
+  ctx.fillStyle = '#fff'; ctx.font = '13px monospace';
+  ctx.fillText(`P1: ${Math.max(0,Math.round(p1.hp))}`, p1.x - 36, p1.y - p1.height - 8);
+  ctx.fillText(`P2: ${Math.max(0,Math.round(p2.hp))}`, p2.x - 36, p2.y - p2.height - 8);
+}
+
+/* KO & end handling */
+function handleKO(loser, winner){
+  state.running = false; state.allowInput = false;
+  if(state.mode === 'surv' && winner === p1){
+    state.round++;
+    const cpuScale = (1 + Math.random() * 0.05) * Math.pow(1.05, state.round - 1);
+    p1 = new Player(200, 1);
+    p1.hp = Math.min(1000, p1.hp * 1.4);
+    p2 = new Player(W - 200, 2, cpuScale);
+    p2.hp = 1000 + (state.round - 1)*100;
+    p1.dead=false; p2.dead=false; p1.exp=0; p2.exp=0; state.projectiles=[]; state.timer=499;
+    state.hazards = []; state.shiftingPlatform = null;
+    if(state.round > 3) {
+      state.shiftingPlatform = {
+        x: W/2, y: H-180, width: 200, height: 20, vx: 100
+      };
+    }
+    runCountdown(()=>{ state.running = true; state.allowInput = true; log(`Survival Round ${state.round} started.`); }, `Round ${state.round}`);
+  } else {
+    const winText = winner === p1 ? 'Player 1 Wins!' : ((state.mode === 'cpu' || state.mode === 'surv') ? 'CPU Wins!' : 'Player 2 Wins!');
+    document.getElementById('endTitle').innerText = winText;
+    document.getElementById('endText').innerText = `${winText} — Round ${state.round}`;
+    document.getElementById('endOverlay').style.display = 'flex';
+    beep(220,0.18);
+  }
+}
+
+/* Menu wiring */
+document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('titleOverlay').style.display = 'none';
+    document.getElementById('overlay').style.display = 'flex';
+});
+
+document.getElementById('menuBtn').addEventListener('click', ()=> document.getElementById('overlay').style.display = 'flex');
+document.getElementById('closeMenu').addEventListener('click', ()=> document.getElementById('overlay').style.display = 'none');
+document.getElementById('mode2p').addEventListener('click', ()=> { state.mode='2p'; });
+document.getElementById('modeCpu').addEventListener('click', ()=> { state.mode='cpu'; });
+document.getElementById('modeSurv').addEventListener('click', ()=> { state.mode='surv'; });
+document.getElementById('rulesBtn').addEventListener('click', ()=> document.getElementById('rulesOverlay').style.display = 'flex');
+
+
+document.getElementById('startMatch').addEventListener('click', ()=>{
+  document.getElementById('overlay').style.display = 'none';
+  if(state.mode !== 'surv') state.round = 1;
+  
+  const cpuScale = state.mode === 'surv' ? Math.pow(1.05, state.round - 1) : 1;
+  p1 = new Player(200,1);
+  p2 = new Player(W - 200,2, cpuScale);
+  if(state.mode === 'surv'){
+    p1.hp = Math.min(1000, p1.hp * 1.4);
+    p2.hp = 1000 + (state.round - 1)*100;
+  }
+  if(state.mode === 'cpu' || state.mode === '2p'){
+    p1.hp = 1000;
+    p2.hp = 1000;
+  }
+  
+  state.timer = 499; state.projectiles = [];
+  state.hazards = []; state.shiftingPlatform = null;
+  if(state.round > 3){
+    state.shiftingPlatform = {
+      x: W/2, y: H-180, width: 200, height: 20, vx: 100
+    };
+  }
+
+  runCountdown(()=>{ state.running = true; state.allowInput = true; log(`Match started: ${state.mode}`); });
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=> location.reload());
+document.getElementById('closeRules').addEventListener('click', ()=> document.getElementById('rulesOverlay').style.display = 'none');
+
+document.getElementById('playAgain').addEventListener('click', ()=>{
+  document.getElementById('endOverlay').style.display = 'none';
+  // This is the new logic for survival mode reset
+  if(state.mode === 'surv' && p1.dead){
+    state.round = 1; // Reset to round 1 if player loses
+    p1 = new Player(200, 1);
+    p1.hp = 1000;
+    p2 = new Player(W - 200, 2);
+    p2.hp = 1000;
+  } else if (state.mode === 'surv' && !p1.dead){
+    state.round++;
+    const cpuScale = (1 + Math.random() * 0.05) * Math.pow(1.05, state.round - 1);
+    p1 = new Player(200, 1);
+    p1.hp = Math.min(1000, p1.hp * 1.4);
+    p2 = new Player(W - 200, 2, cpuScale);
+    p2.hp = 1000 + (state.round - 1)*100;
+  } else {
+    p1 = new Player(200, 1);
+    p2 = new Player(W - 200, 2);
+    p1.hp = 1000; p2.hp = 1000;
+  }
+    
+  p1.dead=false; p2.dead=false; p1.exp=0; p2.exp=0; state.projectiles=[]; state.timer=499;
+  state.hazards = []; state.shiftingPlatform = null;
+  if(state.mode === 'surv' && state.round > 3){
+    state.shiftingPlatform = {
+      x: W/2, y: H-180, width: 200, height: 20, vx: 100
+    };
+  }
+  
+  runCountdown(()=>{ state.running = true; state.allowInput = true; log('Restarted match'); }, `Starting Round ${state.round}`);
+});
+document.getElementById('quitBtn').addEventListener('click', ()=> { document.getElementById('endOverlay').style.display = 'none'; log('Thanks for playing!'); });
+
+/* Utility: ensure parallaxLayers variable */
+ parallaxLayers = [];
+
+/* Add initial UI update */
+updateUI();
+log('Game loaded. Click Start to begin.');
+
+</script>
 </body>
 </html>
